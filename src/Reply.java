@@ -23,16 +23,16 @@ public class Reply {
 		Destination replyto = null;
 
 		try {
-			JMSProducer mp = jc.createProducer();
+			JMSProducer jp = jc.createProducer();
 			TextMessage msg = jc.createTextMessage();
 			msg.setText(text);
 
 			if(to_temp_queue)
-				mp.send(temp_destination, msg);
+				jp.send(temp_destination, msg);
 			else {
 				replyto = jc.createTemporaryQueue();
 				msg.setJMSReplyTo(replyto);
-				mp.send(d, msg);
+				jp.send(d, msg);
 			}
 		} catch (JMSException e) {
 			System.out.println("Reply::send Exception");

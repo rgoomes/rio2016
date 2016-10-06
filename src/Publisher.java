@@ -9,15 +9,13 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 public class Publisher {
-	TopicConnection conn = null;
-	TopicSession session = null;
-	Topic topic = null;
-	TopicPublisher publisher = null;
-	Boolean is_down = false;
+	private TopicConnection conn = null;
+	private TopicSession session = null;
+	private TopicPublisher publisher = null;
 
 	public Publisher() throws JMSException, NamingException {
 		TopicConnectionFactory tcf = (TopicConnectionFactory) InitialContext.doLookup("jms/RemoteConnectionFactory");
-		topic = InitialContext.doLookup("jms/topic/Topic");
+		Topic topic = InitialContext.doLookup("jms/topic/Topic");
 
 		conn = tcf.createTopicConnection("root", "root");
 		session = conn.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);

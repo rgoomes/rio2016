@@ -1,3 +1,4 @@
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Topic;
@@ -10,14 +11,13 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 public class Subscriber {
-	TopicConnection conn = null;
-	TopicSession session = null;
-	TopicSubscriber subscriber = null;
-	Topic topic = null;
+	private TopicConnection conn = null;
+	private TopicSession session = null;
+	private TopicSubscriber subscriber = null;
 
 	public Subscriber(String id) throws JMSException, NamingException {
 		TopicConnectionFactory tcf = (TopicConnectionFactory) InitialContext.doLookup("jms/RemoteConnectionFactory");
-		topic = InitialContext.doLookup("jms/topic/Topic");
+		Topic topic = InitialContext.doLookup("jms/topic/Topic");
 
 		conn = tcf.createTopicConnection("root", "root");
 		conn.setClientID(id);		
