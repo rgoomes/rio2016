@@ -1,0 +1,3 @@
+#!/bin/bash
+
+javac -cp "/usr/share/java/jsoup-1.8.3.jar:/home/rgoomes/Downloads/wildfly-10.1.0.Final/bin/client/jboss-client.jar" *.java
