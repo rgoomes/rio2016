@@ -4,13 +4,14 @@ import javax.naming.NamingException;
 public class CreatorHTML {
 
 	public static void main(String args[]) {
+		int xml_id = 0;
 
 		while(true){
 			try {
 				Subscriber client = new Subscriber("html_creator");
 				String xml_file = client.recv();
 				System.out.println("XML file received");
-				Util.writeXML(xml_file, "html_creator.xml");
+				Util.writeXML(xml_file, "html_creator" + Integer.toString(xml_id++) + ".xml");
 				System.out.println("XML file valid? " + (Util.validXML("html_creator.xml") ? "yes" : "no"));
 				client.stop();
 			} catch(JMSException | NamingException | NullPointerException e){

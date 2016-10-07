@@ -42,7 +42,7 @@ public class Crawler {
 			try {
 				client = new Publisher();
 				retry = false;
-			} catch (JMSException | NamingException e1) {
+			} catch (NamingException e1) {
 				System.out.println("Crawler::sendXML exception: WildFly Server or Topic is Down. Waiting..");
 				try { Thread.sleep(wait_secs * 1000); } catch (InterruptedException e2) {}
 				wait_secs += wait_secs;
@@ -54,7 +54,7 @@ public class Crawler {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Body.class);
 			String xml_msg = asString(jaxbContext, body);
 			client.send(xml_msg);
-		} catch (JAXBException | JMSException | NamingException e) {
+		} catch (JAXBException e) {
 			System.out.println("Crawler::sendXML exception");
 		}
 	}

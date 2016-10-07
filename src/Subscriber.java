@@ -2,39 +2,32 @@ import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Topic;
-import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
-import javax.jms.TopicSubscriber;
-import javax.jms.TopicSession;
 import javax.jms.TextMessage;
+import javax.jms.JMSConsumer;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 public class Subscriber {
-	private TopicConnection conn = null;
-	private TopicSession session = null;
-	private TopicSubscriber subscriber = null;
+	private JMSContext jc;
+	private JMSConsumer subscriber;
 
-	public Subscriber(String id) throws JMSException, NamingException {
+	public Subscriber(String id) throws NamingException {
 		TopicConnectionFactory tcf = (TopicConnectionFactory) InitialContext.doLookup("jms/RemoteConnectionFactory");
 		Topic topic = InitialContext.doLookup("jms/topic/Topic");
+		jc = tcf.createContext("root", "root");
+		jc.setClientID(id);
 
-		conn = tcf.createTopicConnection("root", "root");
-		conn.setClientID(id);		
-		session = conn.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-		conn.start();
-		subscriber = session.createDurableSubscriber(topic, "sub");
+		subscriber = jc.createDurableConsumer(topic, "sub");
 	}
 
-	public String recv() throws JMSException, NamingException {
+	public String recv() throws JMSException {
 		Message msg = subscriber.receive();
 		return ((TextMessage)msg).getText();
 	}
 
-	public void stop() throws JMSException {
+	public void stop() {
 		subscriber.close();
-		conn.stop();
-		session.close();
-		conn.close();
+		jc.close();
 	}
 }

@@ -1,37 +1,30 @@
-import javax.jms.JMSException;
 import javax.jms.Topic;
-import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
-import javax.jms.TopicPublisher;
-import javax.jms.TopicSession;
 import javax.jms.TextMessage;
+import javax.jms.JMSContext;
+import javax.jms.JMSProducer;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 public class Publisher {
-	private TopicConnection conn = null;
-	private TopicSession session = null;
-	private TopicPublisher publisher = null;
+	private Topic topic;
+	private JMSContext jc;
+	private JMSProducer publisher;
 
-	public Publisher() throws JMSException, NamingException {
+	public Publisher() throws NamingException {
 		TopicConnectionFactory tcf = (TopicConnectionFactory) InitialContext.doLookup("jms/RemoteConnectionFactory");
-		Topic topic = InitialContext.doLookup("jms/topic/Topic");
+		topic = InitialContext.doLookup("jms/topic/Topic");
+		jc = tcf.createContext("root", "root");
 
-		conn = tcf.createTopicConnection("root", "root");
-		session = conn.createTopicSession(false, TopicSession.AUTO_ACKNOWLEDGE);
-		conn.start();
-		publisher = session.createPublisher(topic);
+		publisher = jc.createProducer();
 	}
 
-	public void send(String text) throws JMSException, NamingException {
-		TextMessage tm = session.createTextMessage(text);
-		publisher.publish(tm);
+	public void send(String text) {
+		TextMessage tm = jc.createTextMessage(text);
+		publisher.send(topic, tm);
 	}
 
-	public void stop() throws JMSException {
-		publisher.close();
-		conn.stop();
-		session.close();
-		conn.close();
+	public void stop() {
+		jc.close();
 	}
 }
