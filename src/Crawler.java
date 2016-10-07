@@ -4,34 +4,17 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.io.StringWriter;
 
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import javax.jms.JMSException;
 import javax.naming.NamingException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 
 public class Crawler {
 
 	public Crawler() {}
-
-	public String asString(JAXBContext jaxbContext, Body body) {
-		StringWriter sw = new StringWriter();
-
-		try {
-			Marshaller marshaller = jaxbContext.createMarshaller();
-			marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
-			marshaller.marshal(body, sw);
-		} catch (JAXBException e) {
-			System.out.println("Crawler::asString exception");
-		}
-
-		return sw.toString();
-	}
 
 	public void sendXML(Body body) {
 		Publisher client = null;
@@ -43,7 +26,7 @@ public class Crawler {
 				client = new Publisher();
 				retry = false;
 			} catch (NamingException e1) {
-				System.out.println("Crawler::sendXML exception: WildFly Server or Topic is Down. Waiting..");
+				System.out.println("Crawler::sendXML exception: wildFly server or topic are down. waiting..");
 				try { Thread.sleep(wait_secs * 1000); } catch (InterruptedException e2) {}
 				wait_secs += wait_secs;
 				retry = true;
@@ -52,7 +35,7 @@ public class Crawler {
 
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Body.class);
-			String xml_msg = asString(jaxbContext, body);
+			String xml_msg = Util.asString(jaxbContext, body);
 			client.send(xml_msg);
 		} catch (JAXBException e) {
 			System.out.println("Crawler::sendXML exception");
@@ -111,7 +94,7 @@ public class Crawler {
 		try {
 			return Jsoup.connect("https://www.rio2016.com/en/medal-count-country").get();
 		} catch (IOException e) {
-			System.out.println("Crawler::getDocument exception: Exiting..");
+			System.out.println("Crawler::getDocument exception: exiting..");
 		}
 
 		return null;
@@ -121,14 +104,12 @@ public class Crawler {
 		Crawler cl = new Crawler();
 		Document doc = cl.getDocument();
 
-		if(doc == null){
+		if(doc == null)
 			System.out.println("FAIL");
-			return;
+		else {
+			Body body = cl.getXML(doc);
+			cl.sendXML(body);
+			System.out.println("OK");
 		}
-
-		Body body = cl.getXML(doc);
-		cl.sendXML(body);
-
-		System.out.println("OK");
 	}
 }

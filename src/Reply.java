@@ -35,7 +35,7 @@ public class Reply {
 				jp.send(d, msg);
 			}
 		} catch (JMSException e) {
-			System.out.println("Reply::send Exception");
+			System.out.println("Reply::send exception");
 		}
 
 		return replyto;

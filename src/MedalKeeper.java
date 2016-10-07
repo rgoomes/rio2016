@@ -2,6 +2,7 @@ import java.util.List;
 
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
+import javax.jms.InvalidClientIDRuntimeException;
 import javax.naming.NamingException;
 
 public class MedalKeeper {
@@ -16,18 +17,19 @@ public class MedalKeeper {
 
 				while(true){
 					String xml_file = client.recv();
-					System.out.println("XML file received");
-					Util.writeXML(xml_file, "keeper.xml");
-					Boolean xmlValid = Util.validXML("keeper.xml");
-					System.out.println("XML file valid? " + (xmlValid ? "yes" : "no"));
+					Boolean xmlValid = Util.validXML(xml_file);
+					System.out.println((xmlValid ? "Valid" : "Invalid") + " XML file received");
 
 					if(xmlValid)
 						body = Util.unmarshalXMLstring(xml_file);
 					else
 						body = null;
 				}
-			} catch(JMSException | NamingException | NullPointerException e){
-				System.out.println("CrawlerListener::run exception: WildFly Server is down. Exiting..");
+			} catch(JMSException | NamingException | NullPointerException e1){
+				System.out.println("CrawlerListener::run exception: wildfly server is down. exiting..");
+				return;
+			} catch(InvalidClientIDRuntimeException e2){
+				System.out.println("CrawlerListener::run exception: your clientid is in use. wait..");
 				return;
 			}
 		}
@@ -145,8 +147,8 @@ public class MedalKeeper {
 
 			else if(tokens.length == 3 && tokens[2].toLowerCase().equals("medalists"))
 
-				// input : USA gold medalists
-				// output: (a list of USA athletes/teams that got a gold medal)
+				// input : USA bronze medalists
+				// output: (a list of USA athletes/teams that got a bronze medal)
 				return tokens[0] + " " + tokens[1] + " medalists: "
 					+ getMedalistsByTypeByCountry(tokens[0], tokens[1], tokens[0].length() == 3);
 
@@ -171,7 +173,7 @@ public class MedalKeeper {
 					try { Thread.sleep(1000); } catch (InterruptedException e) {}
 					reply.close();
 				} catch(NamingException | JMSException | NullPointerException e){
-					System.out.println("RequesterListener::run exception: WildFly Server is down. Exiting..");
+					System.out.println("RequesterListener::run exception: wildfly server is down. exiting..");
 					return;
 				}
 			}
@@ -187,7 +189,7 @@ public class MedalKeeper {
 		Thread t2 = new Thread(mrl);
 		t2.start();
 
-		t1.join();
-		t2.join();
+		// join working threads
+		t1.join(); t2.join();
 	}
 }

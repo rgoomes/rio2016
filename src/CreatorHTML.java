@@ -1,4 +1,5 @@
 import javax.jms.JMSException;
+import javax.jms.InvalidClientIDRuntimeException;
 import javax.naming.NamingException;
 
 public class CreatorHTML {
@@ -6,18 +7,23 @@ public class CreatorHTML {
 	public static void main(String args[]) {
 		int xml_id = 0;
 
-		while(true){
-			try {
-				Subscriber client = new Subscriber("html_creator");
+		try {
+			Subscriber client = new Subscriber("html_creator");
+
+			while(true){
 				String xml_file = client.recv();
-				System.out.println("XML file received");
-				Util.writeXML(xml_file, "html_creator" + Integer.toString(xml_id++) + ".xml");
-				System.out.println("XML file valid? " + (Util.validXML("html_creator.xml") ? "yes" : "no"));
-				client.stop();
-			} catch(JMSException | NamingException | NullPointerException e){
-				System.out.println("Crawler::Crawler exception: WildFly Server or Topic is Down. Exiting..");
-				return;
+				Boolean xmlValid = Util.validXML(xml_file);
+				System.out.println((xmlValid ? "Valid" : "Invalid") + " XML file received");
+
+				if(xmlValid)
+					Util.writeXML(xml_file, "html_creator" + Integer.toString(xml_id++) + ".xml");
 			}
+		} catch(JMSException | NamingException | NullPointerException e1){
+			System.out.println("Crawler::Crawler exception: wildfly server or topic are down. exiting..");
+			return;
+		} catch(InvalidClientIDRuntimeException e2){
+			System.out.println("Crawler::Crawler exception: your clientid is in use. please wait..");
+			return;
 		}
 	}
 }

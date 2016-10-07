@@ -1,5 +1,5 @@
 import javax.jms.Topic;
-import javax.jms.TopicConnectionFactory;
+import javax.jms.ConnectionFactory;
 import javax.jms.TextMessage;
 import javax.jms.JMSContext;
 import javax.jms.JMSProducer;
@@ -12,10 +12,9 @@ public class Publisher {
 	private JMSProducer publisher;
 
 	public Publisher() throws NamingException {
-		TopicConnectionFactory tcf = (TopicConnectionFactory) InitialContext.doLookup("jms/RemoteConnectionFactory");
+		ConnectionFactory cf = InitialContext.doLookup("jms/RemoteConnectionFactory");
 		topic = InitialContext.doLookup("jms/topic/Topic");
-		jc = tcf.createContext("root", "root");
-
+		jc = cf.createContext("root", "root");
 		publisher = jc.createProducer();
 	}
 
