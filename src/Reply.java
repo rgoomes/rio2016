@@ -7,6 +7,7 @@ import javax.jms.JMSProducer;
 import javax.jms.TextMessage;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.jms.InvalidDestinationRuntimeException;
 
 public class Reply {
 	private ConnectionFactory cf;
@@ -36,6 +37,8 @@ public class Reply {
 			}
 		} catch (JMSException e) {
 			System.out.println("Reply::send exception");
+		} catch (InvalidDestinationRuntimeException e){
+			System.out.println("Reply::send exception: invalid temporary queue");
 		}
 
 		return replyto;
@@ -44,12 +47,13 @@ public class Reply {
 	public TextMessage receive(Boolean from_temp_queue, Destination temp_destination) {
 		JMSConsumer mc;
 
-		if(from_temp_queue)
+		if(from_temp_queue){
 			mc = jc.createConsumer(temp_destination);
-		else
+			return (TextMessage) mc.receive(10000 /* 10 second timeout */ );
+		} else {
 			mc = jc.createConsumer(d);
-
-		return (TextMessage) mc.receive();
+			return (TextMessage) mc.receive();
+		}
 	}
 
 	public void close(){

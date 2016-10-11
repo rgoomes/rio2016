@@ -4,13 +4,16 @@ import javax.jms.JMSException;
 import javax.jms.TextMessage;
 import javax.jms.InvalidClientIDRuntimeException;
 import javax.naming.NamingException;
+import java.util.concurrent.Semaphore;
 
 public class MedalKeeper {
 
 	static Body body = null;
+	static Semaphore mutex = new Semaphore(1);
 
 	public static class CrawlerListener implements Runnable {
-		@Override
+		Boolean failed = false;
+
 		public void run() {
 			try{
 				Subscriber client = new Subscriber("medal_keeper");
@@ -20,17 +23,26 @@ public class MedalKeeper {
 					Boolean xmlValid = Util.validXML(xml_file);
 					System.out.println((xmlValid ? "Valid" : "Invalid") + " XML file received");
 
-					if(xmlValid)
-						body = Util.unmarshalXMLstring(xml_file);
-					else
-						body = null;
+					// mutex
+					try {
+						mutex.acquire();
+						try {
+							if(xmlValid)
+								body = Util.unmarshalXMLstring(xml_file);
+							else
+								// FIXME: not sure if it is supposed to invalidate old valid XML files
+								body = null;
+						} finally {
+							mutex.release();
+						}
+					} catch(InterruptedException ie) {}
 				}
 			} catch(JMSException | NamingException | NullPointerException e1){
 				System.out.println("CrawlerListener::run exception: wildfly server is down. exiting..");
-				return;
+				this.failed = true;
 			} catch(InvalidClientIDRuntimeException e2){
 				System.out.println("CrawlerListener::run exception: your clientid is in use. wait..");
-				return;
+				this.failed = true;
 			}
 		}
 	}
@@ -119,6 +131,28 @@ public class MedalKeeper {
 			return "";
 		}
 
+		public String getMedalsListByCountry(String country_str, Boolean is_code){
+			List<Body.Country> countries_list = body.getCountry();
+
+			for(int i = 0; i < countries_list.size(); i++){
+				Body.Country country = countries_list.get(i);
+
+				if( (is_code && country.getCode().toLowerCase().equals(country_str.toLowerCase()))
+						|| (!is_code && country.getName().toLowerCase().equals(country_str.toLowerCase())) ){
+
+					String medalists = "";
+					for(int j = 0; j < country.getMedal().size(); j++){
+						Body.Country.Medal medal = country.getMedal().get(j);
+						medalists += "\n" + medal.getType() + " - " + medal.getAthlete() + " - " + medal.getSport() + " - " + medal.getCategory();
+					}
+
+					return medalists;
+				}
+			}
+
+			return "";
+		}
+
 		public String request_selector(String request){
 			String[] tokens = request.split(" ");
 
@@ -139,6 +173,12 @@ public class MedalKeeper {
 					return tokens[0] + " medalists: "
 						+ getMedalistsByCountry(tokens[0], tokens[1], tokens[0].length() == 3);
 
+				// input : USA medals
+				// output: (a list of USA medals)
+				else if(tokens[1].toLowerCase().equals("medals"))
+					return tokens[0] + " medals: "
+						+ getMedalsListByCountry(tokens[0], tokens[0].length() == 3);
+
 				// input : USA gold
 				// output: (total number of gold medals)
 				else
@@ -155,22 +195,29 @@ public class MedalKeeper {
 			return "Invalid request.";
 		}
 
-		@Override
 		public void run() {
 			while(true){
 				try {
+					String response = "";
 					Reply reply = new Reply();
 					TextMessage request = reply.receive(false, null);
 					System.out.println("Request: " + request.getText());
 
-					String response;
-					if(body != null)
-						response = request_selector(request.getText());
-					else
-						response = "";
+					// mutex
+					try {
+						mutex.acquire();
+						try {
+							if(body != null)
+								response = request_selector(request.getText());
+							else
+								response = "";
+						} finally {
+							mutex.release();
+						}
+					} catch(InterruptedException ie) {}
 
 					reply.send(response + "\n", true, request.getJMSReplyTo());
-					try { Thread.sleep(1000); } catch (InterruptedException e) {}
+					try { Thread.sleep(100); } catch (InterruptedException e) {}
 					reply.close();
 				} catch(NamingException | JMSException | NullPointerException e){
 					System.out.println("RequesterListener::run exception: wildfly server is down. exiting..");
@@ -189,7 +236,14 @@ public class MedalKeeper {
 		Thread t2 = new Thread(mrl);
 		t2.start();
 
-		// join working threads
-		t1.join(); t2.join();
+		// join thread to wait for it to complete
+		t1.join();
+
+		// if thread 1 failed for some reason don't wait for thread 2
+		if(mcl.failed == true)
+			System.exit(-1);
+
+		// join thread to wait for it to complete
+		t2.join();
 	}
 }

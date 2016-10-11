@@ -5,10 +5,8 @@ import javax.naming.NamingException;
 public class CreatorHTML {
 
 	public static void main(String args[]) {
-		int xml_id = 0;
-
 		try {
-			Subscriber client = new Subscriber("html_creator");
+			Subscriber client = new Subscriber("html_summary_creator");
 
 			while(true){
 				String xml_file = client.recv();
@@ -16,7 +14,7 @@ public class CreatorHTML {
 				System.out.println((xmlValid ? "Valid" : "Invalid") + " XML file received");
 
 				if(xmlValid)
-					Util.writeXML(xml_file, "html_creator" + Integer.toString(xml_id++) + ".xml");
+					Util.writeXML(xml_file, "html" + String.valueOf(System.currentTimeMillis()) + ".xml");
 			}
 		} catch(JMSException | NamingException | NullPointerException e1){
 			System.out.println("Crawler::Crawler exception: wildfly server or topic are down. exiting..");
