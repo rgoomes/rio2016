@@ -16,10 +16,13 @@ import javax.xml.validation.*;
 import org.xml.sax.SAXException;
 
 public class Util {
-	public static String asString(JAXBContext jaxbContext, Body body) {
+
+	// marshall xml object to xml string
+	public static String marshallXML(Body body) {
 		StringWriter sw = new StringWriter();
 
 		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(Body.class);
 			Marshaller marshaller = jaxbContext.createMarshaller();
 			marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
 			marshaller.marshal(body, sw);
@@ -30,7 +33,8 @@ public class Util {
 		return sw.toString();
 	}
 
-	public static Body unmarshalXMLstring(String xml){
+	// unmarshall xml string to xml object
+	public static Body unmarshallXML(String xml){
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Body.class);
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
@@ -47,13 +51,13 @@ public class Util {
 	public static void writeXML(String xml, String out_file){
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Body.class);
-			Body body = unmarshalXMLstring(xml);
-			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+			Marshaller marshaller = jaxbContext.createMarshaller();
+			Body body = unmarshallXML(xml);
 
-			jaxbMarshaller.setProperty("com.sun.xml.internal.bind.xmlHeaders",
+			marshaller.setProperty("com.sun.xml.internal.bind.xmlHeaders",
 					"\n<?xml-stylesheet type=\"text/xsl\" href=\"stylesheet.xsl\"?>");
-			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-			jaxbMarshaller.marshal(body, new File(out_file));
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			marshaller.marshal(body, new File(out_file));
 		} catch (JAXBException e) {
 			System.out.println("Util::writeXML exception");
 		}

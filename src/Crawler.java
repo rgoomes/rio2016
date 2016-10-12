@@ -33,13 +33,8 @@ public class Crawler {
 			}
 		} while(retry);
 
-		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance(Body.class);
-			String xml_msg = Util.asString(jaxbContext, body);
-			client.send(xml_msg);
-		} catch (JAXBException e) {
-			System.out.println("Crawler::sendXML exception");
-		}
+		String xml_msg = Util.marshallXML(body);
+		client.send(xml_msg);
 	}
 
 	public Body getXML(Document doc) {

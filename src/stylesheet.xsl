@@ -4,7 +4,7 @@
 		<title> Rio 2016</title>
 	</head>
 
-	<body border="1px">
+	<body>
 		<div>
 			<h1>Rio2016</h1>
 			<hr></hr><br></br>
@@ -48,6 +48,7 @@
 	<style>
 		html {
 			font-family: "Ubuntu", "Helvetica";
+			padding-left: 5px;
 		}
 
 		table {

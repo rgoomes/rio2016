@@ -28,7 +28,7 @@ public class MedalKeeper {
 						mutex.acquire();
 						try {
 							if(xmlValid)
-								body = Util.unmarshalXMLstring(xml_file);
+								body = Util.unmarshallXML(xml_file);
 							else
 								// FIXME: not sure if it is supposed to invalidate old valid XML files
 								body = null;
@@ -208,7 +208,7 @@ public class MedalKeeper {
 						mutex.acquire();
 						try {
 							if(body != null)
-								response = request_selector(request.getText());
+								response = request_selector(request.getText()) + "\n";
 							else
 								response = "";
 						} finally {
@@ -216,7 +216,7 @@ public class MedalKeeper {
 						}
 					} catch(InterruptedException ie) {}
 
-					reply.send(response + "\n", true, request.getJMSReplyTo());
+					reply.send(response, true, request.getJMSReplyTo());
 					try { Thread.sleep(100); } catch (InterruptedException e) {}
 					reply.close();
 				} catch(NamingException | JMSException | NullPointerException e){
