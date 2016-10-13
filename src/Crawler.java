@@ -8,33 +8,28 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import javax.naming.NamingException;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-
 public class Crawler {
 
 	public Crawler() {}
 
 	public void sendXML(Body body) {
-		Publisher client = null;
+		Publisher publisher = null;
 		Boolean retry = false;
 		int wait_secs = 10;
 
 		do {
 			try {
-				client = new Publisher();
+				publisher = new Publisher();
+				String xml_msg = Util.marshallXML(body);
+				publisher.send(xml_msg);
 				retry = false;
-			} catch (NamingException e1) {
-				System.out.println("Crawler::sendXML exception: wildFly server or topic are down. waiting..");
+			} catch (Exception e1) {
+				System.out.println("Crawler::sendXML exception: wildfly server or topic are down. waiting..");
 				try { Thread.sleep(wait_secs * 1000); } catch (InterruptedException e2) {}
 				wait_secs += wait_secs;
 				retry = true;
 			}
 		} while(retry);
-
-		String xml_msg = Util.marshallXML(body);
-		client.send(xml_msg);
 	}
 
 	public Body getXML(Document doc) {

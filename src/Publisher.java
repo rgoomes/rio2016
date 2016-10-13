@@ -4,14 +4,13 @@ import javax.jms.TextMessage;
 import javax.jms.JMSContext;
 import javax.jms.JMSProducer;
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 public class Publisher {
 	private Topic topic;
 	private JMSContext jc;
 	private JMSProducer publisher;
 
-	public Publisher() throws NamingException {
+	public Publisher() throws Exception /* NamingException */ {
 		ConnectionFactory cf = InitialContext.doLookup("jms/RemoteConnectionFactory");
 		topic = InitialContext.doLookup("jms/topic/Topic");
 		jc = cf.createContext("root", "root");

@@ -16,10 +16,10 @@ public class MedalKeeper {
 
 		public void run() {
 			try{
-				Subscriber client = new Subscriber("medal_keeper");
+				Subscriber subscriber = new Subscriber("medal_keeper");
 
 				while(true){
-					String xml_file = client.recv();
+					String xml_file = subscriber.recv();
 					Boolean xmlValid = Util.validXML(xml_file);
 					System.out.println((xmlValid ? "Valid" : "Invalid") + " XML file received");
 
@@ -35,7 +35,7 @@ public class MedalKeeper {
 						} finally {
 							mutex.release();
 						}
-					} catch(InterruptedException ie) {}
+					} catch(InterruptedException e) {}
 				}
 			} catch(JMSException | NamingException | NullPointerException e1){
 				System.out.println("CrawlerListener::run exception: wildfly server is down. exiting..");
@@ -214,7 +214,7 @@ public class MedalKeeper {
 						} finally {
 							mutex.release();
 						}
-					} catch(InterruptedException ie) {}
+					} catch(InterruptedException e) {}
 
 					reply.send(response, true, request.getJMSReplyTo());
 					try { Thread.sleep(100); } catch (InterruptedException e) {}
@@ -232,6 +232,12 @@ public class MedalKeeper {
 		Thread t1 = new Thread(mcl);
 		t1.start();
 
+		// give thread 1 some time to fail. this is not mandatory, it just allows better clean exits
+		try { Thread.sleep(1000); } catch (InterruptedException e) {}
+		// if thread 1 failed for some reason, exit safely
+		if(mcl.failed == true)
+			System.exit(-1);
+
 		MedalKeeper.RequesterListener mrl = new MedalKeeper.RequesterListener();
 		Thread t2 = new Thread(mrl);
 		t2.start();
@@ -239,7 +245,7 @@ public class MedalKeeper {
 		// join thread to wait for it to complete
 		t1.join();
 
-		// if thread 1 failed for some reason don't wait for thread 2
+		// thread 1 could have failed for some reason here too. check it
 		if(mcl.failed == true)
 			System.exit(-1);
 
