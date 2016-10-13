@@ -1,3 +1,7 @@
 #!/bin/bash
 
-java -cp .:"/usr/share/java/slf4j-api.jar:/usr/share/java/slf4j-simple.jar:/usr/share/java/jsoup-1.8.3.jar:/home/rgoomes/Downloads/wildfly-10.1.0.Final/bin/client/jboss-client.jar" -Djava.util.logging.manager=java.util.logging.LogManager -Djava.util.logging.config.file=/home/rgoomes/workspace/Rio/src/logging.properties Crawler
+if [ "$#" -ne 0 ]; then
+	java -cp .:"/usr/share/java/slf4j-api.jar:/usr/share/java/slf4j-simple.jar:/usr/share/java/jsoup-1.8.3.jar:/home/rgoomes/Downloads/wildfly-10.1.0.Final/bin/client/jboss-client.jar" -Djava.util.logging.manager=java.util.logging.LogManager -Djava.util.logging.config.file=logging.properties "$1"
+else
+	echo "error: expected file name as an argument"
+fi
